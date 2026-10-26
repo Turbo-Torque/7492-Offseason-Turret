@@ -1,0 +1,95 @@
+#pragma once
+
+#include "abstractions/io/intake/IntakeIO.h"
+#include "Constants.h"
+#include "ctre/phoenix6/CANcoder.hpp"
+
+#include "ctre/phoenix6/TalonFX.hpp"
+#include "ctre/phoenix6/controls/VoltageOut.hpp"
+#include "ctre/phoenix6/core/CoreTalonFX.hpp"
+#include "ctre/phoenix6/signals/SpnEnums.hpp"
+#include "rev/ClosedLoopTypes.h"
+#include "rev/ConfigureTypes.h"
+#include "rev/SparkLowLevel.h"
+#include "rev/SparkMax.h"
+#include "rev/config/SparkBaseConfig.h"
+#include "rev/config/SparkMaxConfig.h"
+#include "units/current.h"
+#include "units/voltage.h"
+#include <frc/controller/ArmFeedforward.h>
+
+class IntakeRealIO : public IntakeIO {
+    public:
+        IntakeRealIO() {
+            Configintake1Motor();
+            Configintake2Motor();
+            ConfigPivotMotor();
+        };
+
+        void UpdateInputs(IntakeIOInputs& inputs) override {
+            inputs.position = pivotMotor.GetEncoder().GetPosition();
+            inputs.setpoint = pivotMotor.GetClosedLoopController().GetSetpoint();
+            inputs.intakeVolts = units::volt_t{intake1Motor.GetMotorVoltage().GetValue()};
+            inputs.intakeCurrent = units::ampere_t{intake1Motor.GetTorqueCurrent().GetValue()};
+            inputs.intakeVolts = units::volt_t{intake2Motor.GetMotorVoltage().GetValue()};
+            inputs.intakeCurrent = units::ampere_t{intake2Motor.GetTorqueCurrent().GetValue()};
+            
+            if ((inputs.position  <= 0)) {
+                inputs.pivotAtSetpoint = true;
+            } 
+        }
+
+        void SetIntakeVolts(units::volt_t voltage) override{
+            intake1Motor.SetVoltage(voltage);
+            // intake2Motor.SetVoltage(voltage) -> needs to be inverted
+        }
+
+
+        void SetIntakeSetpoint(double rot) override{
+            units::radian_t currentAngle{(pivotMotor.GetEncoder().GetPosition())};
+            units::volt_t ff = pivotFF.Calculate(currentAngle, 0_rad_per_s);
+            pivotMotor.GetClosedLoopController().SetSetpoint(rot, rev::spark::SparkLowLevel::ControlType::kPosition, rev::spark::kSlot0, ff.value());
+        }
+
+    private:
+        ctre::phoenix6::hardware::TalonFX intake1Motor{IntakeConstants::kintake1MotorPort};
+        ctre::phoenix6::hardware::TalonFX intake1Motor{IntakeConstants::kintake1MotorPort};
+        rev::spark::SparkMax pivotMotor{IntakeConstants::kIntakePivotPort, rev::spark::SparkLowLevel::MotorType::kBrushless};
+        //ctre::phoenix6::hardware::CANcoder pivotEncoder{IntakeConstants::kIntakeCANPort};
+        ctre::phoenix6::controls::VoltageOut voltageRequest{0_V};
+
+        frc::ArmFeedforward pivotFF {
+            units::volt_t{IntakeConstants::kSPivot},
+            units::volt_t{IntakeConstants::kGPivot},
+            units::unit_t<frc::ArmFeedforward::kv_unit>{IntakeConstants::kVPivot}};
+        
+        void Configintake1Motor() {
+            ctre::phoenix6::configs::TalonFXConfiguration config{};
+            config.MotorOutput.NeutralMode = ctre::phoenix6::signals::NeutralModeValue::Brake;
+            config.CurrentLimits.SupplyCurrentLimit = 45_A;
+            config.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+            intake1Motor.GetConfigurator().Apply(config);
+
+        }
+
+        void ConfigPivotMotor() {
+            rev::spark::SparkMaxConfig config;
+            config.closedLoop.P(0.04, rev::spark::kSlot0);
+            config.closedLoop.I(0.001, rev::spark::kSlot0);
+            config.closedLoop.D(0.002, rev::spark::kSlot0);
+
+            config.closedLoop.P(0.02, rev::spark::kSlot1);
+            config.closedLoop.I(0.0, rev::spark::kSlot1);
+            config.closedLoop.D(0.002, rev::spark::kSlot1);
+
+            config.SmartCurrentLimit(35, 50);
+            config.SetIdleMode(rev::spark::SparkBaseConfig::kCoast);
+            config.OpenLoopRampRate(0.1);
+            config.closedLoop.AllowedClosedLoopError(0.20);
+            config.Inverted(true);
+
+            pivotMotor.Configure(config, rev::ResetMode::kResetSafeParameters, rev::PersistMode::kPersistParameters);
+            pivotMotor.GetEncoder().SetPosition(0.0);
+        }
+};
