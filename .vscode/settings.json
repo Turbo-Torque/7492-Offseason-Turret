@@ -14,5 +14,15 @@
     "**/.factorypath": true,
     "**/*~": true
   },
-  "C_Cpp.default.configurationProvider": "vscode-wpilib"
+  "C_Cpp.default.configurationProvider": "vscode-wpilib",
+  "C_Cpp.intelliSenseEngine": "disabled",
+  "C_Cpp.errorSquiggles": "disabled",
+  "C_Cpp.autocomplete": "disabled",
+  "C_Cpp.formatting": "disabled",
+  "clangd.arguments": [
+    "--compile-commands-dir=${workspaceFolder}/build/TargetedCompileCommands/linuxathenadebug",
+    "--query-driver=C:/Users/Public/wpilib/2026/roborio/bin/arm-frc*-linux-gnueabi-g*.exe",
+    "--background-index",
+    "--header-insertion=never"
+  ]
 }

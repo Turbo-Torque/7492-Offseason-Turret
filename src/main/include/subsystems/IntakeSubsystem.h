@@ -1,21 +1,24 @@
 #pragma once
-#include "Constants.h"
-#include "frc2/command/CommandPtr.h"
-#include "frc2/command/SubsystemBase.h"
-#include "abstractions/io/intake/IntakeIO.h"
-#include "opencv2/core/cvstd.hpp"
 
+#include <cmath>
+#include <memory>
+
+#include <frc2/command/CommandPtr.h>
+#include <frc2/command/SubsystemBase.h>
+#include <units/voltage.h>
+
+#include "Constants.h"
+#include "io/Intake/IntakeIO.h"
 
 class IntakeSubsystem : public frc2::SubsystemBase {
     public:
-        IntakeSubsystem(std::unique_ptr<IntakeIO> io);
+        explicit IntakeSubsystem(std::unique_ptr<IntakeIO> io);
 
-        void SetIntakeVoltage(units::volt_t voltage) { io -> SetIntakeVolts(voltage);}
-        void SetAgitateVolts(units::volt_t volts) { io -> SetAgitateVolts(volts);}
-        void SetPivotVolts(units::volt_t volts) { io -> SetPivotVolts(volts);}
-        void SetIntakeSetpoint(double rot) {io -> SetIntakeSetpoint(rot);}
-        void Agitate(double rot) {io -> Agitate(rot);}
-
+        void SetIntakeVoltage(units::volt_t voltage) { io->SetIntakeVolts(voltage); }
+        void SetAgitateVolts(units::volt_t volts) { io->SetAgitateVolts(volts); }
+        void SetPivotVolts(units::volt_t volts) { io->SetPivotVolts(volts); }
+        void SetIntakeSetpoint(double rot) { io->SetIntakeSetpoint(rot); }
+        void Agitate(double rot) { io->Agitate(rot); }
 
         bool IntakeNeedHopper();
         bool AgitateRollers();
