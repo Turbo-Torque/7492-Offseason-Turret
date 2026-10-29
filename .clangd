@@ -1,2 +1,5 @@
 CompileFlags:
   CompilationDatabase: build/TargetedCompileCommands/linuxathenadebug
+  # TurboLib headers. Also added in build.gradle; kept here so clangd finds them
+  # even before compile_commands.json is regenerated.
+  Add: [-Ilib/include]
