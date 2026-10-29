@@ -1,9 +1,22 @@
 #pragma once
 
 #include <units/voltage.h>
+#include "turbolib/structure/SwervePorts.hpp"
 
 // TODO: every value below is a placeholder. Set the real CAN IDs, setpoints,
 // and feedforward gains for this robot before running on hardware.
+
+using namespace units::literals;
+
+namespace DrivebaseConstants {
+    inline turbolib::structure::SwervePorts kBackRightPorts{5, 6, 20};
+    inline turbolib::structure::SwervePorts kFrontRightPorts{7, 8, 21};
+    inline turbolib::structure::SwervePorts kFrontLeftPorts{1, 2, 18};
+    inline turbolib::structure::SwervePorts kBackLeftPorts{3, 4, 19};
+
+    inline constexpr double kWheelDiameter = 0.1016;  // meters
+}
+
 namespace IntakeConstants {
     // CAN IDs
     inline constexpr int kintake1MotorPort = 1;  // TalonFX roller (leader)
